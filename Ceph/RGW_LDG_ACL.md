@@ -63,9 +63,9 @@ RGW: 对应到我们的RGW，需要在用户使能source bucket的BL功能时，
 
 RGW：对应到RGW，需要能够为bl_deliver赋予target bucket的写权限。
 
-3. 对bucket操作权限的验证
+3. 当后台通过LDG向targetbucket中写access log时，会通过bucket ACL对LDG的权限进行验证。
 
-RGW：当前的实现即支持。
+RGW：当前的实现即支持，只需要关注对bl_deliver进行权限验证的处理过程与其他用户是否有区别即可。
 
 ## 为实现RGW LDG ACL需要添加处理的部分
 RGW中预定义的Group:\
