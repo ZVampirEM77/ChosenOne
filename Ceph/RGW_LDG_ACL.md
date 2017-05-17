@@ -67,6 +67,8 @@ RGW：对应到RGW，需要能够为bl_deliver赋予target bucket的写权限。
 
 RGW：当前的实现即支持，只需要关注对bl_deliver进行权限验证的处理过程与其他用户是否有区别即可。
 
+![BL使能过程](https://raw.githubusercontent.com/ZVampirEM77/ChosenOne/master/Image/RGW_LDG_ACL_1.png)
+
 ## 为实现RGW LDG ACL需要添加处理的部分
 RGW中预定义的Group:\
 // rgw_acl.h
