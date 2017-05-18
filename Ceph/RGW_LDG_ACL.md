@@ -151,3 +151,5 @@ RGW中预定义的Group:\
 2. recurse是什么模式？
 
 3. bl_deliver是否需要对log obj有可读权限呢？
+
+4. 因为当前在PutObj和GetObj操作时，若是bl_deliver，则直接返回0，不会通过ACL对权限加以验证，所以bldeliver可以向任何bucket中写入obj，后面这部分肯定要结合上面第3个问题进行修改的。
