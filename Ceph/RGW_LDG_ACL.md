@@ -29,6 +29,17 @@ RGWOp\
 &emsp;&emsp;\-&ensp;RGWGetACLs_ObjStore_S3&emsp;&emsp;\\\ rgw_rest_s3.h\
 &emsp;&emsp;\-&ensp;RGWPutACLs_ObjStore_S3&emsp;&emsp;\\\ rgw_rest_s3.h
 
+
+BL相关类的集成关系如下：\
+RGWOp\
+\-&ensp;RGWPutBL&emsp;&emsp;\\\ rgw_op.h\
+\-&ensp;RGWGetBL&emsp;&emsp;\\\ rgw_op.h\
+&emsp;\-&ensp;RGWPutBL_ObjStore&emsp;&emsp;\\\ rgw_rest.h\
+&emsp;\-&ensp;RGWGetBL_ObjStore&emsp;&emsp;\\\ rgw_rest.h\
+&emsp;&emsp;\-&ensp;RGWPutBL_ObjStore_S3&emsp;&emsp;\\\ rgw_rest_s3.h\
+&emsp;&emsp;\-&ensp;RGWGetBL_ObjStore_S3&emsp;&emsp;\\\ rgw_rest_s3.h
+
+
 还是从程序处理HTTP请求的入口点process_request函数看起:\
 process_request  &emsp;&emsp;&emsp;\\\ rgw_process.cc\
 \-&ensp;get_handler()\
@@ -46,7 +57,7 @@ Note: 这里需要特别说明一下，根据AWS S3，ACL是资源级的访问�
 &emsp;\-&ensp;根据上面已经列出来的，在RGWHandler_REST_Obj_S3和RGWHandler_REST_Bucket_S3的响应的op_*处理函数中会对是否是ACL操作请求进行判断，若是则会创建RGWGetACLs_ObjStore_S3和RGWPutACLs_ObjStore_S3等实例\
 &emsp;\-&ensp;op->init()&emsp;&emsp;\\\实际上会调用RGWOp::init()\
 &emsp;&emsp;\-&ensp;RGWOp::init()&emsp;&emsp;\\\在该函数中会对Rados \*store，req_state, RGWHandler等赋值\
-&emsp;&emsp;&emsp;\-&ensp;其中RGWHandler参数会被赋值为op所对应的handler，在ACL处理过程中，即对应为RGWHandler_REST_Obj_S3和RGWHandler_REST_Bucket_S3。因此实际上op中存在指向其所属的Handler的成员变量。
+&emsp;&emsp;&emsp;\-&ensp;其中RGWHandler参数会被赋值为op所对应的handler，在ACL处理过程中，即对应为RGWHandler_REST_Obj_S3和RGWHandler_REST_Bucket_S3。因此实际上op中存在指向其所属的Handler的成员变量。\
 \-&ensp;verify_requester()\
 &emsp;\-&ensp;RGWOp::verify_requester&emsp;&emsp;\\\实际上调用的是RGWOp::verify_requester\
 &emsp;&emsp;\-&ensp;handler->authorize()\
@@ -137,6 +148,7 @@ RGW中预定义的Group:\
     ACL_GROUP_NONE                = 0,\
     ACL_GROUP_ALL_USERS           = 1,\
     ACL_GROUP_AUTHENTICATED_USERS = 2,\
+    ACL_GROUP_LOG_DELIVERY        = 3,\
 };
 
 // rgw_acl_s3.h
@@ -144,6 +156,14 @@ RGW中预定义的Group:\
 >#define RGW_URI_AUTH_USERS      "http://acs.amazonaws.com/groups/global/AuthenticatedUsers"
 
 因为LDG对于实现BL功能是必需的，所以此处需要添加LDG的定义
+
+### 针对启用source bucket的BL功能时，对LDG是否具有target bucket写权限的验证处理
+这部分处理需要注意如下：
+1. 对于启用source bucket的BL功能时，从process_request开始处理，get_handler返回的还是RGWHandler_REST_Bucket_S3，而handler->get_op()实际上返回的是RGWPutBL_ObjStore_S3，关于RGWPutBL_ObjStore_S3类的继承关系上面已经列出来了。后面按照流程处理就好。需要着重说明的是：
+- 开始时，我想的是在op->verify_permission函数被调用时对LDG是否具有target bucket写权限进行验证。但是需要注意的是，op->verify_permission函数原本的处理是对当前请求操作的用户对source bucket的操作权限进行验证。不光是BL处理的部分，RGW中其他相关的op的verify_permission也基本是本着这样的思想设计实现的，即verify_permission函数主要用来对操作请求者是否具备所请求资源的相应的操作处理权限进行验证。所以为了保证这种函数语义的专一性，不可以将对LDG的验证部分加在verify_permission函数中；
+- 有了上面的分析，再加上验证LDG对target bucket是否具有写权限本就是启用source bucket处理过程中所进行的操作，所以最合理的，是把对LDG验证部分的处理放在op->execute()函数中。
+- 在启用source bucket的BL功能时，需要对bl_deliver是否具有target bucket的WRITE和READ_ACP权限进行验证。
+
 
 ## 当前存在的问题
 1. RGW中存在Key ACL？对应到AWS S3中的什么？

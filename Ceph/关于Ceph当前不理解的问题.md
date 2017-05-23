@@ -10,4 +10,5 @@ A：因为S3V2或S3V4是对该账户是否为AWS S3的账户进行验证，即�
 5. RGW中请求处理时，会从头到尾使用到一个req_state的变量，这是做什么的？\
 A：req_state变量是与每个请求一一对应的，即当接收到一个操作请求时，就会在处理函数process_request中创建一个req_state结构体的变量，这个变量是用来保存该请求的一系列状态信息的。即是该请求涉及到的资源在内存中的一个反映。
 
-6. AWS S3中READ和READ_ACP，以及WRITE和WRITE_ACP有什么区别？
+6. AWS S3中READ和READ_ACP，以及WRITE和WRITE_ACP有什么区别？\
+READ和WRITE是授予对bucket or object的读写权限，READ_ACP和WRITE_ACP是授予对bucket ACL or object ACL的读写权限。
