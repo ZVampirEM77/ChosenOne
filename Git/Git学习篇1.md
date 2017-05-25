@@ -15,6 +15,9 @@
 - git reset --soft      回退到某个版本，只回退了commit的信息，不会回复stage (如果还要提交，直接commit即可)\
 - git reset --hard      彻底回退到某个版本，本地的源码也会变为上一个版本的内容\
 
-4. git add -p
-执行git add -p会进入一个交互界面，git会针对每个修改的hunk询问你是否stage this hunk or not stage this hunk。将一次commit拆分为多个commit的精髓在于此。
+4. git add -p\
+执行git add -p会进入一个交互界面，git会针对每个修改的hunk询问你是否stage this hunk or not stage this hunk。将一次commit拆分为多个commit的精髓在于此。\
 
+5. git blame:\
+git blame file
+git show commit_id 
